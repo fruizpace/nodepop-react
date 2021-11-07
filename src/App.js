@@ -1,24 +1,55 @@
-import logo from './logo.svg';
-import './App.css';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+  Link,
+} from "react-router-dom";
+import { AdvertsPage, AdvertPage, NewAdvPage } from "./components/adverts";
+import { LoginPage, PrivateRoute } from "./components/auth";
+import { useState } from "react";
+import { logout } from "./components/auth/service";
 
-function App() {
+import { AuthContextProvider } from "./components/auth/context";
+
+function App({ isInitiallyLogged }) {
+  const [isLogged, setIsLogged] = useState(isInitiallyLogged);
+
+  const handleLogin = () => {
+    setIsLogged(true);
+  };
+
+  const handleLogout = () => {
+    logout().then(() => setIsLogged(false));
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <AuthContextProvider value={{ isLogged, handleLogout, handleLogin }}>
+        <div className="app">
+          <Switch>
+            <Route path="/login">
+              {(routeProps) => <LoginPage {...routeProps} />}
+            </Route>
+            <PrivateRoute path="/adv/new" component={NewAdvPage} />
+            <PrivateRoute path="/ads/:advId" component={AdvertPage} />
+            <PrivateRoute path="/ads" component={AdvertsPage} />
+            <PrivateRoute exact path="/">
+              <Redirect to="/ads" />
+            </PrivateRoute>
+            <Route path="/404">
+              <div>404 || Not Found Page</div>
+              <Link style={{ color: "rgb(1, 162, 151)" }} to="/">
+                Volver al inicio
+              </Link>
+            </Route>
+            <Route>
+              <Redirect to="/404" />
+            </Route>
+          </Switch>
+        </div>
+      </AuthContextProvider>
+    </Router>
   );
 }
 
